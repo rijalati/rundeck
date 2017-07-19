@@ -25,7 +25,7 @@ eclipse.project.name = "${project.getParent().eclipse.project.name}:launcher"
 
 subprojects{
     defaultTasks 'clean','assemble'
-    ext.jettyVersion='9.0.7.v20131107'
+    ext.jettyVersion='9.2.22.v20170606'
     repositories {
         flatDir dirs: "$rootDir/locallib"
     }

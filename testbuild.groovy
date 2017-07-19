@@ -41,7 +41,7 @@ def version=props.currentVersion+tag
 //versions of dependency we want to verify
 def versions=[
         mysql:'5.1.35',
-        jetty:'9.0.7.v20131107',
+        jetty:'9.2.22.v20170606',
         servlet:'3.0.0.v201112011016'
 ]
 
@@ -102,6 +102,7 @@ def manifest=[
         "lib/jetty-http-${versions.jetty}.jar",
         "lib/jetty-io-${versions.jetty}.jar",
         "lib/jetty-security-${versions.jetty}.jar",
+        "lib/jetty-jsp-${versions.jetty}.jar",
         "lib/log4j-1.2.16.jar",
         "lib/rundeck-jetty-server-${version}.jar",
         "lib/javax.servlet-${versions.servlet}.jar",

@@ -40,8 +40,9 @@ grails.project.dependency.resolution = {
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
 
-         runtime 'org.eclipse.jetty.aggregate:jetty-all:9.0.7.v20131107'
-         runtime 'org.eclipse.jetty:jetty-jaas:9.0.7.v20131107'
+         runtime 'org.eclipse.jetty.aggregate:jetty-all:9.2.22.v20170606'
+         runtime 'org.eclipse.jetty:jetty-jaas:9.2.22.v20170606'
+         runtime 'org.eclipse.jetty:jetty-jsp:9.2.22.v20170606'
     }
 
     plugins {

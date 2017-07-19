@@ -82,13 +82,14 @@ fi
 # Server Bootstrap
 %dir /var/lib/rundeck/bootstrap
 /var/lib/rundeck/bootstrap/javax.servlet-3.0.0.v201112011016.jar
-/var/lib/rundeck/bootstrap/jetty-all-9.0.7.v20131107.jar
-/var/lib/rundeck/bootstrap/jetty-security-9.0.7.v20131107.jar
-/var/lib/rundeck/bootstrap/jetty-server-9.0.7.v20131107.jar
-/var/lib/rundeck/bootstrap/jetty-util-9.0.7.v20131107.jar
-/var/lib/rundeck/bootstrap/jetty-io-9.0.7.v20131107.jar
-/var/lib/rundeck/bootstrap/jetty-http-9.0.7.v20131107.jar
-/var/lib/rundeck/bootstrap/jetty-jaas-9.0.7.v20131107.jar
+/var/lib/rundeck/bootstrap/jetty-all-9.2.22.v20170606.jar
+/var/lib/rundeck/bootstrap/jetty-security-9.2.22.v20170606.jar
+/var/lib/rundeck/bootstrap/jetty-server-9.2.22.v20170606.jar
+/var/lib/rundeck/bootstrap/jetty-util-9.2.22.v20170606.jar
+/var/lib/rundeck/bootstrap/jetty-io-9.2.22.v20170606.jar
+/var/lib/rundeck/bootstrap/jetty-http-9.2.22.v20170606.jar
+/var/lib/rundeck/bootstrap/jetty-jaas-9.2.22.v20170606.jar
+/var/lib/rundeck/bootstrap/jetty-jsp-9.2.22.v20170606.jar
 /var/lib/rundeck/bootstrap/log4j-1.2.16.jar
 /var/lib/rundeck/bootstrap/jna-3.2.2.jar
 /var/lib/rundeck/bootstrap/libpam4j-1.5.jar

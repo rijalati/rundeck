@@ -138,7 +138,7 @@ grails.project.dependency.resolution = {
     }
 }
 grails.war.resources = { stagingDir, args ->
-    delete(file: "${stagingDir}/WEB-INF/lib/jetty-all-9.0.7.v20131107.jar")
+    delete(file: "${stagingDir}/WEB-INF/lib/jetty-all-9.2.22.v20170606.jar")
     delete(file: "${stagingDir}/WEB-INF/lib/rundeck-jetty-server-${rundeckVersion}.jar")
     delete(file: "${stagingDir}/WEB-INF/lib/servlet-api-2.5.jar")
     if(System.getProperty('rundeck.war.additional')!=null){

@@ -38,6 +38,7 @@ dependencies {
     runtime(
         [group: 'org.eclipse.jetty.aggregate', name: 'jetty-all', version: jettyVersion],
         [group: 'org.eclipse.jetty', name: 'jetty-jaas', version: jettyVersion],
+        [group: 'org.eclipse.jetty', name: 'jetty-jsp', version: jettyVersion],
 //        [group: 'org.eclipse.jetty.orbit', name: 'javax.servlet', version: '3.0.0.v201112011016'],
     )
     testCompile (
