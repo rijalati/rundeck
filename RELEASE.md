@@ -1,16 +1,9 @@
-Release 2.8.4
+Release 2.9.2
 ===========
 
-Date: 2017-07-12
+Date: 2017-08-07
 
-Name: <span style="color: Purple"><span class="glyphicon glyphicon-gift"></span> "cafe cubano purple gift"</span>
-
-## Upgrading from 2.8.0
-
-**Important Note**: please see the [Upgrading Guide](http://rundeck.org/docs/upgrading/index.html) if you are using Mysql or H2 database,
-and are upgrading from Rundeck 2.8.0.
-
-A DB schema change requires a manual fix before upgrading.
+Name: <span style="color: Fuchsia"><span class="glyphicon glyphicon-bell"></span> "caffe latte fuchsia bell"</span>
 
 ## Upgrading from Earlier versions
 
@@ -18,24 +11,24 @@ A DB schema change requires a manual fix before upgrading.
 
 ## Notes
 
-This release is primarily bug fixes. 
+Bugfix release.
+
+Previous changes in 2.9.0: [Relese 2.9.0](https://github.com/rundeck/rundeck/blob/v2.9.0/RELEASE.md)
+
+For more detail see [2.9.0 Changes](https://github.com/rundeck/rundeck/issues/2577)
+
+Stay tuned! We are also adding many new features to [Rundeck Pro](http://rundeck.com).
 
 ## Contributors
 
-* GitHub (web-flow)
 * Greg Schueler (gschueler)
-* René Kroon
 
 ## Bug Reporters
 
-* JustRiedy
-* ReneKroon
-* simple365
+* FritsHoogland
 
 ## Issues
 
-[Milestone 2.8.4](https://github.com/rundeck/rundeck/milestone/57)
+[Milestone 2.9.2](https://github.com/rundeck/rundeck/milestone/60)
 
-* [Mysql syntax error after login](https://github.com/rundeck/rundeck/issues/2609)
-* [Move to Gradle 3.5](https://github.com/rundeck/rundeck/pull/2600)
-* [Node List - Fails to display greater than 100 nodes per page](https://github.com/rundeck/rundeck/issues/2514)
+* [Running an ad-hoc command with ansible plugin results in java.lang.NoSuchMethodError: com.dtolabs.rundeck.core.execution.ExecutionContext.getDataContext()Ljava/util/Map;](https://github.com/rundeck/rundeck/issues/2675)
