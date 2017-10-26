@@ -85,4 +85,86 @@ class JobExecSpec extends Specification {
         true          | _
         false         | _
     }
+
+    def "to map with project"() {
+        when:
+        Map map = new JobExec(
+                jobGroup: 'group',
+                jobName: 'name',
+                jobProject:'projectB',
+                description: 'a monkey',
+        ).toMap()
+
+        then:
+
+        map == [
+                jobref     : [
+                        group      : 'group',
+                        name       : 'name',
+                        project: 'projectB',
+                ],
+                description: 'a monkey'
+        ]
+
+    }
+
+    def "from map with node intersect"() {
+        given:
+        def map = [
+                jobref     : [
+                        group      : 'group',
+                        name       : 'name',
+                        nodefilters: [
+                                dispatch: [
+                                        nodeIntersect: nodeIntersect
+                                ]
+                        ]
+                ],
+                description: 'a monkey'
+        ]
+        when:
+        def result = JobExec.jobExecFromMap(map)
+
+        then:
+        result.nodeIntersect == nodeIntersect
+        where:
+        nodeIntersect | _
+        true          | _
+        false         | _
+
+    }
+    def "from map with jobref.project"() {
+        given:
+        def map = [
+                jobref     : [
+                        group      : 'group',
+                        name       : 'name',
+                        project:'projectB',
+                ],
+                description: 'a monkey'
+        ]
+        when:
+        def result = JobExec.jobExecFromMap(map)
+
+        then:
+        result.jobProject == 'projectB'
+
+    }
+    def "from map with project"() {
+        given:
+        def map = [
+                jobref     : [
+                        group      : 'group',
+                        name       : 'name',
+                ],
+                project:'projectB',
+                description: 'a monkey'
+        ]
+        when:
+        def result = JobExec.jobExecFromMap(map)
+
+        then:
+        result.jobProject == 'projectB'
+
+    }
 }

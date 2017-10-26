@@ -217,7 +217,7 @@ class ScheduledExecutionServiceSpec extends Specification {
         ).save()
 
         when:
-        service.scheduleAdHocJob(job, "user", null, Mock(Execution), [:], [:], 0, null)
+        service.scheduleAdHocJob(job, "user", null, Mock(Execution), [:], [:], null)
 
         then:
         1 * service.executionServiceBean.getExecutionsAreActive() >> executionsAreActive
@@ -264,7 +264,7 @@ class ScheduledExecutionServiceSpec extends Specification {
         startTime.set(year: 1999, month: 1, dayOfMonth: 1, hourOfDay: 1, minute: 2, seconds: 42)
 
         when:
-        service.scheduleAdHocJob(job, "user", null, Mock(Execution), [:], [:], 0, startTime)
+        service.scheduleAdHocJob(job, "user", null, Mock(Execution), [:], [:], startTime)
 
         then:
         1 * service.executionServiceBean.getExecutionsAreActive() >> executionsAreActive
@@ -763,6 +763,7 @@ class ScheduledExecutionServiceSpec extends Specification {
         ScheduledExecutionController.ONSUCCESS_TRIGGER_NAME | 'email' | 'c@example.com,d@example.com'
         ScheduledExecutionController.ONFAILURE_TRIGGER_NAME | 'email' | 'c@example.com,d@example.com'
         ScheduledExecutionController.ONSTART_TRIGGER_NAME   | 'email' | 'c@example.com,d@example.com'
+        ScheduledExecutionController.OVERAVGDURATION_TRIGGER_NAME   | 'email' | 'c@example.com,d@example.com'
     }
     def "validate notifications email data any domain"() {
         given:
@@ -793,6 +794,8 @@ class ScheduledExecutionServiceSpec extends Specification {
         ScheduledExecutionController.ONFAILURE_TRIGGER_NAME | 'email' | 'example@any.domain'
         ScheduledExecutionController.ONFAILURE_TRIGGER_NAME | 'email' | '${job.user.email}'
         ScheduledExecutionController.ONSTART_TRIGGER_NAME   | 'email' | 'monkey@internal'
+        ScheduledExecutionController.OVERAVGDURATION_TRIGGER_NAME   | 'email' | 'user@test'
+
     }
     def "invalid notifications data"() {
         given:
@@ -829,6 +832,10 @@ class ScheduledExecutionServiceSpec extends Specification {
         ScheduledExecutionController.NOTIFY_START_RECIPIENTS|ScheduledExecutionController.ONSTART_TRIGGER_NAME   | 'email' | 'c@example.com d@example.com'
         ScheduledExecutionController.NOTIFY_START_URL|ScheduledExecutionController.ONSTART_TRIGGER_NAME   | 'url' | ''
         ScheduledExecutionController.NOTIFY_START_URL|ScheduledExecutionController.ONSTART_TRIGGER_NAME   | 'url' | 'c@example.com d@example.com'
+        ScheduledExecutionController.NOTIFY_OVERAVGDURATION_RECIPIENTS|ScheduledExecutionController.OVERAVGDURATION_TRIGGER_NAME   | 'email' | ''
+        ScheduledExecutionController.NOTIFY_OVERAVGDURATION_RECIPIENTS|ScheduledExecutionController.OVERAVGDURATION_TRIGGER_NAME   | 'email' | 'c@example.com d@example.com'
+        ScheduledExecutionController.NOTIFY_OVERAVGDURATION_URL|ScheduledExecutionController.OVERAVGDURATION_TRIGGER_NAME   | 'url' | ''
+        ScheduledExecutionController.NOTIFY_OVERAVGDURATION_URL|ScheduledExecutionController.OVERAVGDURATION_TRIGGER_NAME   | 'url' | 'c@example.com d@example.com'
     }
     def "do update job invalid notifications"() {
         given:
@@ -861,6 +868,8 @@ class ScheduledExecutionServiceSpec extends Specification {
         ScheduledExecutionController.NOTIFY_FAILURE_URL|ScheduledExecutionController.ONFAILURE_TRIGGER_NAME | 'url' | 'monkey@ example.com'
         ScheduledExecutionController.NOTIFY_START_RECIPIENTS|ScheduledExecutionController.ONSTART_TRIGGER_NAME   | 'email' | 'c@example.com d@example.com'
         ScheduledExecutionController.NOTIFY_START_URL|ScheduledExecutionController.ONSTART_TRIGGER_NAME   | 'url' | 'c@example.com d@example.com'
+        ScheduledExecutionController.NOTIFY_OVERAVGDURATION_RECIPIENTS|ScheduledExecutionController.OVERAVGDURATION_TRIGGER_NAME   | 'email' | 'c@example.com d@example.com'
+        ScheduledExecutionController.NOTIFY_OVERAVGDURATION_URL|ScheduledExecutionController.OVERAVGDURATION_TRIGGER_NAME   | 'url' | 'c@example.com d@example.com'
     }
     def "validate notifications email form fields"() {
         given:
@@ -883,6 +892,7 @@ class ScheduledExecutionServiceSpec extends Specification {
         'onsuccess'|ScheduledExecutionController.NOTIFY_ONSUCCESS_EMAIL | ScheduledExecutionController.NOTIFY_SUCCESS_RECIPIENTS | 'c@example.com,d@example.com'
         'onfailure'|ScheduledExecutionController.NOTIFY_ONFAILURE_EMAIL | ScheduledExecutionController.NOTIFY_FAILURE_RECIPIENTS | 'c@example.com,d@example.com'
         'onstart'|ScheduledExecutionController.NOTIFY_ONSTART_EMAIL | ScheduledExecutionController.NOTIFY_START_RECIPIENTS | 'c@example.com,d@example.com'
+        'onavgduration'|ScheduledExecutionController.NOTIFY_OVERAVGDURATION_EMAIL | ScheduledExecutionController.NOTIFY_OVERAVGDURATION_RECIPIENTS | 'c@example.com,d@example.com'
     }
     def "invalid notifications email form fields"() {
         given:
@@ -904,6 +914,7 @@ class ScheduledExecutionServiceSpec extends Specification {
         'onsuccess'|ScheduledExecutionController.NOTIFY_ONSUCCESS_EMAIL | ScheduledExecutionController.NOTIFY_SUCCESS_RECIPIENTS | 'c@example.'
         'onfailure'|ScheduledExecutionController.NOTIFY_ONFAILURE_EMAIL | ScheduledExecutionController.NOTIFY_FAILURE_RECIPIENTS | '@example.com'
         'onstart'|ScheduledExecutionController.NOTIFY_ONSTART_EMAIL | ScheduledExecutionController.NOTIFY_START_RECIPIENTS | 'c@example.'
+        'onavgduration'|ScheduledExecutionController.NOTIFY_OVERAVGDURATION_EMAIL | ScheduledExecutionController.NOTIFY_OVERAVGDURATION_RECIPIENTS | 'c@example.'
     }
 
 
@@ -1514,6 +1525,7 @@ class ScheduledExecutionServiceSpec extends Specification {
         'onsuccess'|ScheduledExecutionController.NOTIFY_ONSUCCESS_EMAIL | ScheduledExecutionController.NOTIFY_SUCCESS_RECIPIENTS | 'c@example.com,d@example.com'
         'onfailure'|ScheduledExecutionController.NOTIFY_ONFAILURE_EMAIL | ScheduledExecutionController.NOTIFY_FAILURE_RECIPIENTS | 'c@example.com,d@example.com'
         'onstart'|ScheduledExecutionController.NOTIFY_ONSTART_EMAIL | ScheduledExecutionController.NOTIFY_START_RECIPIENTS | 'c@example.com,d@example.com'
+        'onavgduration'|ScheduledExecutionController.NOTIFY_OVERAVGDURATION_EMAIL | ScheduledExecutionController.NOTIFY_OVERAVGDURATION_RECIPIENTS | 'c@example.com,d@example.com'
     }
     @Unroll
     def "do update options modify"(){
@@ -1862,6 +1874,7 @@ class ScheduledExecutionServiceSpec extends Specification {
         given:
         def uuid=setupDoUpdate(enabled)
         def se = new ScheduledExecution(createJobParams()).save()
+        service.jobSchedulerService = Mock(JobSchedulerService)
 
         when:
         def results = service._doupdate([id: se.id.toString()] + inparams, mockAuth())
@@ -2060,7 +2073,7 @@ class ScheduledExecutionServiceSpec extends Specification {
             getUsername() >> 'test'
             getRoles() >> new HashSet<String>(['test'])
         }
-
+        service.jobSchedulerService = Mock(JobSchedulerService)
 
         when:
         def results = service._doupdateJob(se.id,newJob, auth)
@@ -2310,6 +2323,7 @@ class ScheduledExecutionServiceSpec extends Specification {
             getFrameworkProject(_) >> projectMock
         }
         service.fileUploadService = Mock(FileUploadService)
+        service.jobSchedulerService = Mock(JobSchedulerService)
         when:
         def result = service.rescheduleJobs(null)
 
@@ -2326,7 +2340,7 @@ class ScheduledExecutionServiceSpec extends Specification {
         1 * service.frameworkService.getAuthContextForUserAndRolesAndProject('bob', ['a', 'b'],job1.project) >> Mock(UserAndRolesAuthContext)
         1 * service.executionServiceBean.getExecutionsAreActive() >> true
         1 * service.frameworkService.getRundeckBase() >> ''
-        1 * service.quartzScheduler.scheduleJob(_, _) >> new Date()
+        1 * service.jobSchedulerService.scheduleJob(_, _, _, exec1.dateStarted) >> exec1.dateStarted
     }
     def "reschedule adhoc execution getAuthContext error"() {
         given:
@@ -2369,6 +2383,7 @@ class ScheduledExecutionServiceSpec extends Specification {
         def uuid = setupDoUpdate(true)
         
         def se = new ScheduledExecution(createJobParams()).save()
+        service.jobSchedulerService=Mock(JobSchedulerService)
         when:
         def params = baseJobParams()+[
                 
@@ -2647,6 +2662,42 @@ class ScheduledExecutionServiceSpec extends Specification {
 
 
 
+    }
+
+    @Unroll
+    def "nextExecutionTime on remote Cluster"() {
+        given:
+        setupDoValidate(true)
+        service.quartzScheduler = Mock(Scheduler)
+        service.quartzScheduler.getTrigger(_) >> null
+
+        def job = new ScheduledExecution(
+                createJobParams(
+                        scheduled: hasSchedule,
+                        scheduleEnabled: scheduleEnabled,
+                        executionEnabled: executionEnabled,
+                        userRoleList: 'a,b',
+                        serverNodeUUID: TEST_UUID2
+                )
+        ).save()
+
+        when:
+        def result = service.nextExecutionTime(job)
+
+        then:
+        if(expectScheduled){
+            result != null
+        }else{
+            result == null
+        }
+
+
+        where:
+        scheduleEnabled | executionEnabled | hasSchedule | expectScheduled
+        true            | true             | true        | true
+        false           | true             | true        | false
+        true            | false            | true        | false
+        false           | false            | true        | false
     }
 
 }

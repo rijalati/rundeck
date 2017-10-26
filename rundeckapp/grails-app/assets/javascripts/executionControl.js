@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+//= require util/compactMapList
 /**
  * Control execution follow page state for an execution
  */
@@ -61,6 +63,7 @@ var FollowControl = Class.create({
     totalCount:0,
     totalDuration:0,
     killjobhtml:'',
+    killjobauth: false,
     execData:null,
     nodemode:false,
     browsemode:false,
@@ -74,6 +77,8 @@ var FollowControl = Class.create({
     appLinks: null,
     workflow:null,
     multiworkflow:null,
+    clusterExec: null,
+    showClusterExecWarning: true,
 
     initialize: function(eid,elem,params){
         this.executionId=eid;
@@ -666,6 +671,7 @@ var FollowControl = Class.create({
             $(this.viewoptionsCompleteId).hide();
             return;
         }
+        this.clusterExec = data.clusterExec && data.serverNodeUUID || null;
 
         this.runningcmd.id = data.id;
         this.runningcmd.offset = data.offset;
@@ -680,14 +686,24 @@ var FollowControl = Class.create({
         var entries = $A(data.entries);
         //if tail mode, count number of rows
         var rowcount= this.countTableRows(this.cmdoutputtbl);
+        var compacted = data.compacted;
+        var compactedAttr = data.compactedAttr;
         if (entries != null && entries.length > 0) {
             var tr;
-            for (var i = 0 ; i < entries.length ; i++) {
-                var e = entries[i];
+            var self=this;
+            var eachEntry = function (e) {
+                "use strict";
                 //this.runningcmd.entries.push(e);
-                tr=this.genDataRow(e, this.cmdoutputtbl);
+                tr=self.genDataRow(e, self.cmdoutputtbl);
                 //if tail mode and count>last lines, remove 1 row from top
                 rowcount++;
+            };
+            if (compacted) {
+                _decompactMapList(entries, compactedAttr, eachEntry);
+            } else {
+                for (var i = 0; i < entries.length; i++) {
+                    eachEntry(entries[i]);
+                }
             }
             if (this.refresh && rowcount > this.lastlines && !data.lastlinesSupported && this.truncateToTail) {
                 //remove extra lines
@@ -701,6 +717,14 @@ var FollowControl = Class.create({
 
         if (typeof(this.onAppend) == 'function') {
             this.onAppend();
+        }
+        if (this.clusterExec && this.showClusterExecWarning) {
+            if (!this.runningcmd.completed) {
+                //show cluster loading info
+                jQuery('#' + $(this.parentElement).identify() + '_clusterinfo').show();
+            } else {
+                jQuery('#' + $(this.parentElement).identify() + '_clusterinfo').hide();
+            }
         }
 
         if (this.runningcmd.completed && this.runningcmd.jobcompleted) {
@@ -720,6 +744,9 @@ var FollowControl = Class.create({
             var time= (this.tailmode && this.taildelay > 0) ? this.taildelay * 1000 : 50;
             if(this.runningcmd.pending != null){
                 time= (this.tailmode && this.taildelay > 0) ? this.taildelay * 5000 : 5000
+            }
+            if (data.retryBackoff) {
+                time = Math.max(data.retryBackoff,time);
             }
             setTimeout(function() {
                 obj.loadMoreOutput(obj.runningcmd.id, obj.runningcmd.offset);
@@ -805,7 +832,7 @@ var FollowControl = Class.create({
         }
         if(this.lineCount == 0) {
             //show empty message
-            jQuery('#' + this.parentElement+'_empty').show();
+            jQuery('#' + $(this.parentElement).identify() + '_empty').show();
         }
     },
     toggleDataBody: function(ctxid) {
@@ -850,6 +877,7 @@ var FollowControl = Class.create({
             if (this.tailmode && this.lastlines && this.truncateToTail && offset == 0) {
                 params.lastlines = this.lastlines;
             }
+            params.compacted = 'true';
             return jQuery.ajax({
                 url: _genUrl(url, params) + this.extraParams,
                 type: 'post',
@@ -1415,29 +1443,11 @@ var FollowControl = Class.create({
     },
     updatecancel: function(data) {
 
-        var orig = data;
-        if (data['cancelled']) {
-            if ($('cancelresult')) {
-                $('cancelresult').loading('Killing Job...');
-            }
-        } else {
-            if ($('cancelresult')) {
-                var sp = new Element('span');
-                sp.addClassName('fail');
-                setText(sp, (data['error'] ? data['error'] : 'Failed to Kill Job.'));
-                clearHtml($('cancelresult'));
-                $('cancelresult').appendChild(sp);
-                appendHtml($('cancelresult'), this.killjobhtml);
-            }
-        }
     },
 
     docancel: function() {
-        if ($('cancelresult')) {
-            $('cancelresult').loading('Killing Job...');
-        }
         var obj=this;
-        jQuery.ajax({
+        return jQuery.ajax({
             type: 'POST',
             url: this.appLinks.executionCancelExecution,
             dataType:'json',
@@ -1449,6 +1459,6 @@ var FollowControl = Class.create({
             error: function (jqxhr,status,err) {
                 obj.updatecancel({error: "Failed to kill Job: " + (jqxhr.responseJSON && jqxhr.responseJSON.error? jqxhr.responseJSON.error: err)});
             }
-        });
+        }).success(_ajaxReceiveTokens.curry('exec_cancel_token'));
     }
 });

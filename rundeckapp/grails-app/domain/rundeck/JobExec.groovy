@@ -101,7 +101,7 @@ public class JobExec extends WorkflowStep implements IWorkflowJobItem{
     public Map toMap(){
         final Map map = [jobref: [group: jobGroup ? jobGroup : '', name: jobName]]
         if(jobProject){
-            map.project = jobProject
+            map.jobref.project = jobProject
         }
         if(argString){
             map.jobref.args=argString
@@ -148,8 +148,8 @@ public class JobExec extends WorkflowStep implements IWorkflowJobItem{
         JobExec exec = new JobExec()
         exec.jobGroup=map.jobref.group
         exec.jobName=map.jobref.name
-        if(map.jobref.jobProject){
-            exec.jobProject = map.jobref.jobProject
+        if (map.jobref.project || map.project) {
+            exec.jobProject = map.jobref.project ?: map.project
         }
         if(map.jobref.args){
             exec.argString=map.jobref.args
@@ -161,7 +161,7 @@ public class JobExec extends WorkflowStep implements IWorkflowJobItem{
         }
         exec.keepgoingOnSuccess = !!map.keepgoingOnSuccess
         exec.description=map.description?.toString()
-        if(map.jobref.nodefilters){
+        if(map.jobref.nodefilters instanceof Map){
             exec.nodeFilter=map.jobref.nodefilters.filter?.toString()
             if(exec.nodeFilter){
                 def dispatch = map.jobref.nodefilters.dispatch
