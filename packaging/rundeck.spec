@@ -15,6 +15,8 @@ RunDeck, is no ordinary wooden deck. You can build a bon fire on this deck.
 Rundeck provides a single console for dispatching commands across many resources.
 
 %changelog
+* Thu Oct 26 2017 Ritchie J Latimore <ritchie.latimore@bluemedora.com> 2.10.0-0
+    - Update jetty versions
 * Tue Nov 22 2016 Greg Schueler <greg@simplifyops.com> 2.7.0-0
 	- Remove old CLI tools
 * Wed Nov 16 2016 Greg Schueler <greg@simplifyops.com> 2.7.0-0
