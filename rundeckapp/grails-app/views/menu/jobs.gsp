@@ -22,7 +22,8 @@
     <meta name="layout" content="base"/>
     <meta name="tabpage" content="jobs"/>
     <title><g:message code="gui.menu.Workflows"/> - <g:enc>${params.project ?: request.project}</g:enc></title>
-    <g:javascript library="yellowfade"/>
+
+    <asset:javascript src="util/yellowfade.js"/>
     <g:javascript library="pagehistory"/>
     <g:javascript library="prototype/effects"/>
     <asset:javascript src="menu/jobs.js"/>
@@ -58,9 +59,9 @@
 
             $('busy').hide();
         }
-        function requestError(item,trans){
+        function requestError(item,message){
             unloadExec();
-            showError("Failed request: "+item+" . Result: "+trans.getStatusText());
+            showError("Failed request: "+item+". Result: "+message);
         }
         function loadExec(id,eparams) {
             $("error").hide();
@@ -68,11 +69,12 @@
             if(!params){
                 params={id:id};
             }
-            jQuery('#execDivContent').load(_genUrl(appLinks.scheduledExecutionExecuteFragment, params),function(response,status,xhr){
+            jQuery('#execDivContent').load(_genUrl(appLinks.scheduledExecutionExecuteFragment, params),
+                function(response,status,xhr){
                 if (status == "success") {
                     loadedFormSuccess(!!id,id);
                 } else {
-                    requestError("executeFragment for [" + id + "]",xhr);
+                    requestError("executeFragment for [" + id + "]",xhr.statusText);
                 }
             });
         }
@@ -103,8 +105,8 @@
                         showError(result.message ? result.message : result.error ? result.error : "Failed request");
                     }
                 },
-                error: function (x) {
-                    requestError("runJobInline", x);
+                error: function (data, jqxhr, err) {
+                    requestError("runJobInline", err);
                 }
             });
         }
@@ -280,14 +282,13 @@
         function showJobDetails(elem){
             //get url
             var href=elem.href || elem.getAttribute('data-href');
-            var match=href.match(/\/job\/.+?\/(.+)$/);
-            if(!match){
-                return;
-            }
             lastHref=href;
             doshow=true;
             //match is id
-            var matchId=match[1];
+            var matchId = jQuery(elem).data('jobId');
+            if(!matchId){
+                return;
+            }
             var viewdom=$('jobIdDetailHolder');
             var bcontent=$('jobIdDetailContent');
             if(viewdom){
@@ -550,7 +551,8 @@
             ko.applyBindings(bulkeditor,document.getElementById('group_controls'));
         });
     </script>
-    <g:javascript library="yellowfade"/>
+
+    <asset:javascript src="util/yellowfade.js"/>
     <asset:javascript src="menu/joboptions.js"/>
     <style type="text/css">
     .error{
@@ -592,7 +594,7 @@
 </g:if>
 <div class="runbox primary jobs" id="indexMain">
     <div id="error" class="alert alert-danger" style="display:none;"></div>
-    <g:render template="workflowsFull" model="${[jobExpandLevel:jobExpandLevel,jobgroups:jobgroups,wasfiltered:wasfiltered?true:false, clusterMap: clusterMap,nextExecutions:nextExecutions,jobauthorizations:jobauthorizations,authMap:authMap,nowrunningtotal:nowrunningtotal,max:max,offset:offset,paginateParams:paginateParams,sortEnabled:true,rkey:rkey]}"/>
+    <g:render template="workflowsFull" model="${[jobExpandLevel:jobExpandLevel,jobgroups:jobgroups,wasfiltered:wasfiltered?true:false, clusterMap: clusterMap,nextExecutions:nextExecutions,jobauthorizations:jobauthorizations,authMap:authMap,nowrunningtotal:nowrunningtotal,max:max,offset:offset,paginateParams:paginateParams,sortEnabled:true,rkey:rkey, clusterModeEnabled:clusterModeEnabled]}"/>
 </div>
 <div class="modal fade" id="execDiv" role="dialog" aria-labelledby="deleteFilterModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">

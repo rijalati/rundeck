@@ -28,6 +28,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import rundeck.CommandExec
 import rundeck.Execution
+import rundeck.Notification
 import rundeck.ScheduledExecution
 import rundeck.Workflow
 import rundeck.services.ExecutionService
@@ -114,7 +115,7 @@ class ExecutionJobTest extends GroovyTestCase{
             'test'
         }
         def authcontext=mockAuth.createMock()
-        mockfs.demand.getAuthContextForUserAndRoles(1..1) { user, rolelist ->
+        mockfs.demand.getAuthContextForUserAndRolesAndProject(1..1) { user, rolelist, project ->
             authcontext
         }
         ExecutionService es = mockes.createMock()
@@ -170,7 +171,7 @@ class ExecutionJobTest extends GroovyTestCase{
             'test'
         }
         def authcontext=mockAuth.createMock()
-        mockfs.demand.getAuthContextForUserAndRoles(1..1) { user, rolelist ->
+        mockfs.demand.getAuthContextForUserAndRolesAndProject(1..1) { user, rolelist, project ->
             authcontext
         }
 
@@ -219,7 +220,7 @@ class ExecutionJobTest extends GroovyTestCase{
         FrameworkService.metaClass.static.getFrameworkForUserAndRoles = { String user, List rolelist, String rundeckbase ->
             'fakeFramework'
         }
-        WorkflowExecutionServiceThread stb=new TestWEServiceThread(null,null,null)
+        WorkflowExecutionServiceThread stb=new TestWEServiceThread(null,null,null,null)
         stb.successful=true
         stb.result=wfeForSuccess(true)
         def testExecmap = [thread: stb, testExecuteAsyncBegin: true]
@@ -253,7 +254,7 @@ class ExecutionJobTest extends GroovyTestCase{
         FrameworkService.metaClass.static.getFrameworkForUserAndRoles = { String user, List rolelist, String rundeckbase ->
             'fakeFramework'
         }
-        WorkflowExecutionServiceThread stb=new TestWEServiceThread(null,null,null)
+        WorkflowExecutionServiceThread stb=new TestWEServiceThread(null,null,null,null)
         stb.successful=true
         def threshold=new testThreshold()
         def testExecmap = [thread: stb, testExecuteAsyncBegin: true, threshold:threshold]
@@ -286,7 +287,7 @@ class ExecutionJobTest extends GroovyTestCase{
         FrameworkService.metaClass.static.getFrameworkForUserAndRoles = { String user, List rolelist, String rundeckbase ->
             'fakeFramework'
         }
-        WorkflowExecutionServiceThread stb=new TestWEServiceThread(null,null,null)
+        WorkflowExecutionServiceThread stb=new TestWEServiceThread(null,null,null,null)
         stb.successful=true
         def threshold=new testThreshold()
         threshold.wasMet=true
@@ -336,7 +337,7 @@ class ExecutionJobTest extends GroovyTestCase{
         FrameworkService.metaClass.static.getFrameworkForUserAndRoles = { String user, List rolelist, String rundeckbase ->
             'fakeFramework'
         }
-        WorkflowExecutionServiceThread stb = new WorkflowExecutionServiceThread(null,null,null)
+        WorkflowExecutionServiceThread stb = new WorkflowExecutionServiceThread(null,null,null,null)
         stb.result = wfeForSuccess(false)
 
         def testExecmap = [thread: stb, testExecuteAsyncBegin: true]
@@ -406,7 +407,7 @@ class ExecutionJobTest extends GroovyTestCase{
         FrameworkService.metaClass.static.getFrameworkForUserAndRoles = { String user, List rolelist, String rundeckbase ->
             'fakeFramework'
         }
-        WorkflowExecutionServiceThread stb = new WorkflowExecutionServiceThread(null,null,null)
+        WorkflowExecutionServiceThread stb = new WorkflowExecutionServiceThread(null,null,null,null)
         stb.result=wfeForSuccess(false)
         def testExecmap = [thread: stb, testExecuteAsyncBegin: true]
         mockes.demand.executeAsyncBegin(1..1) { Framework framework, AuthContext authContext, Execution execution1, ScheduledExecution scheduledExecution = null, Map extraParams = null, Map extraParamsExposed = null ->
@@ -774,6 +775,57 @@ class ExecutionJobTest extends GroovyTestCase{
         job.finalizeRetryMax=2
         def result=job.saveState(null,es,execution,true,false, false,true,null,-1,null,execMap)
         Assert.assertEquals(false,result)
+    }
+
+
+    /**
+     * executeAsyncBegin succeeds,finish succeeds, thread succeeds, calls avgDurationExceeded
+     */
+    @Test
+    void testExecuteCommandNotification(){
+        ScheduledExecution se = setupJob()
+        Notification notif = new Notification()
+        notif.eventTrigger = "onavgduration"
+        notif.type = "email"
+        notif.content= '{"recipients":"test@test","subject":"test"}'
+        notif.save()
+        se.notifications = []
+        se.notifications.add(notif)
+        se.totalTime = 100
+        se.execCount = 10
+        se.save()
+        Execution execution = setupExecution(se, new Date(), new Date())
+        Assert.assertNotNull(execution)
+        ExecutionJob job = new ExecutionJob()
+        def mockes = new GrailsMock(ExecutionService)
+        def mockeus = new GrailsMock(ExecutionUtilService)
+        FrameworkService.metaClass.static.getFrameworkForUserAndRoles = { String user, List rolelist, String rundeckbase ->
+            'fakeFramework'
+        }
+        WorkflowExecutionServiceThread stb=new TestWEServiceThread(null,null,null,null)
+        stb.successful=true
+        stb.result=wfeForSuccess(true)
+        def testExecmap = [thread: stb, testExecuteAsyncBegin: true, scheduledExecution: se]
+        mockes.demand.executeAsyncBegin(1..1) { Framework framework, AuthContext authContext, Execution execution1, ScheduledExecution scheduledExecution = null, Map extraParams = null, Map extraParamsExposed = null ->
+            Assert.assertEquals(execution,execution1)
+            stb.start()
+            testExecmap
+        }
+        mockes.demand.avgDurationExceeded(1..1){long schedId, Map content->
+            true
+        }
+        mockeus.demand.finishExecution(1..1){ Map datamap->
+            Assert.assertTrue(datamap.testExecuteAsyncBegin)
+        }
+
+        ExecutionService es = mockes.createMock()
+        ExecutionUtilService eus = mockeus.createMock()
+        job.finalizeRetryMax=1
+        job.finalizeRetryDelay=0
+
+        def result=job.executeCommand(es,eus,execution,null, null, null, 0, [:], [:])
+        Assert.assertEquals(true,result.success)
+        Assert.assertEquals(testExecmap,result.execmap)
     }
 
     private ScheduledExecution setupJob(Closure extra=null) {

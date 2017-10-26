@@ -18,10 +18,10 @@ package rundeck.controllers
 
 import com.dtolabs.rundeck.app.support.ExtNodeFilters
 import com.dtolabs.rundeck.core.authorization.UserAndRolesAuthContext
-import com.dtolabs.rundeck.core.authorization.Validation
 import com.dtolabs.rundeck.core.common.IRundeckProject
 import com.dtolabs.rundeck.core.common.NodeEntryImpl
 import com.dtolabs.rundeck.core.common.NodeSetImpl
+import com.dtolabs.rundeck.core.plugins.configuration.Property
 import com.dtolabs.rundeck.server.authorization.AuthConstants
 import grails.test.mixin.TestFor
 import org.codehaus.groovy.grails.web.servlet.mvc.SynchronizerTokensHolder
@@ -32,7 +32,10 @@ import rundeck.services.PasswordFieldsService
 import rundeck.services.ScheduledExecutionService
 import rundeck.services.StorageManager
 import rundeck.services.UserService
+import rundeck.services.authorization.PoliciesValidation
+import rundeck.services.framework.RundeckProjectConfigurable
 import spock.lang.Specification
+import spock.lang.Unroll
 
 import static com.dtolabs.rundeck.server.authorization.AuthConstants.ACTION_ADMIN
 import static com.dtolabs.rundeck.server.authorization.AuthConstants.ACTION_ADMIN
@@ -241,18 +244,21 @@ class FrameworkControllerSpec extends Specification {
         controller.configStorageService=Mock(StorageManager){
             1 * existsFileResource(_) >> false
             1 * existsDirResource('acls/') >> true
-            1 * listDirPaths('acls/') >> { args ->
-                ['acls/test','acls/blah.aclpolicy','acls/adir/']
+            1 * listDirPaths('acls/','.+\\.aclpolicy$') >> { args ->
+                ['acls/blah.aclpolicy']
             }
+            0*_(*_)
         }
         controller.frameworkService=Mock(FrameworkService){
             1 * getAuthContextForSubject(_) >> null
             1 * authorizeApplicationResourceAny(_,AuthConstants.RESOURCE_TYPE_SYSTEM_ACL,[ACTION_READ,ACTION_ADMIN]) >> true
+            0*_(*_)
         }
         controller.apiService=Mock(ApiService){
             1 * requireVersion(_,_,14) >> true
             1 * extractResponseFormat(_,_,_,_) >> 'json'
             1 * jsonRenderDirlist('acls/',_,_,['acls/blah.aclpolicy'],_)>>{args-> args[4].success=true}
+            0*_(*_)
         }
         when:
         params.path=''
@@ -270,18 +276,21 @@ class FrameworkControllerSpec extends Specification {
         controller.configStorageService=Mock(StorageManager){
             1 * existsFileResource(_) >> false
             1 * existsDirResource('acls/') >> true
-            1 * listDirPaths('acls/') >> { args ->
-                ['acls/test','acls/blah.aclpolicy','acls/adir/']
+            1 * listDirPaths('acls/','.+\\.aclpolicy$') >> { args ->
+                ['acls/blah.aclpolicy']
             }
+            0*_(*_)
         }
         controller.frameworkService=Mock(FrameworkService){
             1 * getAuthContextForSubject(_) >> null
                          1 * authorizeApplicationResourceAny(_,AuthConstants.RESOURCE_TYPE_SYSTEM_ACL,[ACTION_READ,ACTION_ADMIN]) >> true
+            0*_(*_)
         }
         controller.apiService=Mock(ApiService){
             1 * requireVersion(_,_,14) >> true
             1 * extractResponseFormat(_,_,_,_) >> 'xml'
             1 * xmlRenderDirList('acls/',_,_,['acls/blah.aclpolicy'],_)>>{args-> args[4].success(ok:true)}
+            0*_(*_)
         }
         when:
         params.path=''
@@ -319,7 +328,7 @@ class FrameworkControllerSpec extends Specification {
             }
         }
         controller.authorizationService=Stub(AuthorizationService){
-            validateYamlPolicy('test.aclpolicy',_)>>Stub(Validation){
+            validateYamlPolicy('test.aclpolicy',_)>>Stub(PoliciesValidation){
                 isValid()>>true
             }
         }
@@ -359,7 +368,7 @@ class FrameworkControllerSpec extends Specification {
             }
         }
         controller.authorizationService=Stub(AuthorizationService){
-            validateYamlPolicy('test.aclpolicy',_)>>Stub(Validation){
+            validateYamlPolicy('test.aclpolicy',_)>>Stub(PoliciesValidation){
                 isValid()>>true
             }
         }
@@ -397,7 +406,7 @@ class FrameworkControllerSpec extends Specification {
             }
         }
         controller.authorizationService=Stub(AuthorizationService){
-            validateYamlPolicy('test.aclpolicy',_)>>Stub(Validation){
+            validateYamlPolicy('test.aclpolicy',_)>>Stub(PoliciesValidation){
                 isValid()>>true
             }
         }
@@ -441,7 +450,7 @@ class FrameworkControllerSpec extends Specification {
             }
         }
         controller.authorizationService=Stub(AuthorizationService){
-            validateYamlPolicy('test.aclpolicy',_)>>Stub(Validation){
+            validateYamlPolicy('test.aclpolicy',_)>>Stub(PoliciesValidation){
                 isValid()>>true
             }
         }
@@ -537,7 +546,7 @@ class FrameworkControllerSpec extends Specification {
             }
         }
         controller.authorizationService=Stub(AuthorizationService){
-            validateYamlPolicy('test.aclpolicy',_)>>Stub(Validation){
+            validateYamlPolicy('test.aclpolicy',_)>>Stub(PoliciesValidation){
                 isValid()>>false
             }
         }
@@ -582,7 +591,7 @@ class FrameworkControllerSpec extends Specification {
             }
         }
         controller.authorizationService=Stub(AuthorizationService){
-            validateYamlPolicy('test.aclpolicy',_)>>Stub(Validation){
+            validateYamlPolicy('test.aclpolicy',_)>>Stub(PoliciesValidation){
                 isValid()>>false
             }
         }
@@ -636,6 +645,7 @@ class FrameworkControllerSpec extends Specification {
         1 * fwkService.updateFrameworkProjectConfig(_,{
             it['project.description'] == 'abc'
         },_) >> [success:true]
+        1 * fwkService.validateProjectConfigurableInput(_,_)>>[:]
 
     }
     def "save project with out description"(){
@@ -667,6 +677,7 @@ class FrameworkControllerSpec extends Specification {
         1 * fwkService.updateFrameworkProjectConfig(_,{
             it['project.description'] == ''
         },_) >> [success:true]
+        1 * fwkService.validateProjectConfigurableInput(_,_)>>[:]
 
     }
     def "get project resources, project dne"(){
@@ -817,9 +828,33 @@ class FrameworkControllerSpec extends Specification {
         params[SynchronizerTokensHolder.TOKEN_URI] = '/test'
     }
 
+    static class TestConfigurableBean implements RundeckProjectConfigurable {
+
+        Map<String, String> categories = [:]
+
+        List<Property> projectConfigProperties = []
+
+        Map<String, String> propertiesMapping = [:]
+    }
+
+    @Unroll
     def "save project updating passive mode"(){
         setup:
-        def fwkService=Mock(FrameworkService)
+        defineBeans {
+            testConfigurableBean(TestConfigurableBean) {
+                projectConfigProperties = ScheduledExecutionService.ProjectConfigProperties
+                propertiesMapping = ScheduledExecutionService.ConfigPropertiesMapping
+            }
+        }
+        def fwkService = Mock(FrameworkService) {
+            validateProjectConfigurableInput(_, _) >> [config: [testConfigurableBean: [
+                    disableExecution: disableExecution,
+                    disableSchedule : disableSchedule
+            ]],props:[
+                    'project.disable.executions':disableExecution,
+                    'project.disable.schedule':disableSchedule
+            ]]
+        }
         controller.frameworkService = fwkService
         controller.resourcesPasswordFieldsService = Mock(PasswordFieldsService)
         controller.fcopyPasswordFieldsService = Mock(PasswordFieldsService)
@@ -833,8 +868,12 @@ class FrameworkControllerSpec extends Specification {
 
         params.project = "TestSaveProject"
         params.description='abc'
-        params.disableExecutionMode = disableExecution
-        params.disableScheduleMode = disableSchedule
+        params.extraConfig = [
+                testConfigurableBean: [
+                        disableExecution   : disableExecution,
+                        disableSchedule: disableSchedule
+                ]
+        ]
 
         setupFormTokens(params)
         when:
