@@ -16,7 +16,8 @@ RUN apt-get -y update && \
         iputils-ping \
         jq \
         zip \
-        apt-transport-https
+        apt-transport-https \
+        openjdk-8-jdk
 
 # add cli tool debian repo
 ARG CLI_DEB_URL
@@ -28,17 +29,6 @@ RUN echo "deb $CLI_DEB_URL /" | sudo tee -a /etc/apt/sources.list
 #RUN apt-key add - < /tmp/rundeck.gpg.key
 RUN curl "https://bintray.com/user/downloadSubjectPublicKey?username=bintray" > /tmp/bintray.gpg.key
 RUN apt-key add - < /tmp/bintray.gpg.key
-
-
-## Install Oracle JVM
-RUN \
-  echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | debconf-set-selections && \
-  add-apt-repository -y ppa:webupd8team/java && \
-  apt-get update && \
-  apt-get install -y oracle-java8-installer
-
-## DEBUG ENV VARS AT THIS POINT
-#RUN echo "**** ENV VARS START ****" && printenv > /env_at_build_time && cat /env_at_build_time && echo "**** ENV VARS END ****"
 
 # RUNDECK
 
@@ -73,10 +63,10 @@ RUN test -f $HOME/data/rd.deb || apt-get -y install rundeck-cli=$CLI_VERS
 ARG LAUNCHER_URL
 ARG RUNDECK_NODE=rundeck1
 RUN echo "download rundeck launcher: ${LAUNCHER_URL}"
-RUN test -f $HOME/data/rundeck-launcher.jar && \
-     cp $HOME/data/rundeck-launcher.jar $HOME/rundeck-launcher.jar || \
+RUN test -f $HOME/data/rundeck-launcher.war && \
+     cp $HOME/data/rundeck-launcher.war $HOME/rundeck-launcher.war || \
      true
-RUN test -f $HOME/rundeck-launcher.jar || curl -sS -f -L -o $HOME/rundeck-launcher.jar ${LAUNCHER_URL}
+RUN test -f $HOME/rundeck-launcher.war || curl -sS -f -L -o $HOME/rundeck-launcher.war ${LAUNCHER_URL}
 
 # copy api test sources
 RUN mkdir $HOME/api_test
@@ -90,7 +80,7 @@ USER rundeck
 RUN java \
       -Dserver.http.port=4440 \
       -Dserver.hostname=$RUNDECK_NODE \
-      -jar $HOME/rundeck-launcher.jar --installonly 
+      -jar $HOME/rundeck-launcher.war --installonly
 
 #      --java-opts "-Djava.security.egd=file:/dev/./urandom" 
 

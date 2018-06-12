@@ -81,7 +81,7 @@ cat > $HOME/etc/profile <<END
 RDECK_BASE=$RDECK_BASE
 export RDECK_BASE
 
-JAVA_HOME=/usr/lib/jvm/java-8-oracle
+JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-8-openjdk-amd64}
 export JAVA_HOME
 
 PATH=\$JAVA_HOME/bin:\$RDECK_BASE/tools/bin:\$PATH
@@ -263,7 +263,7 @@ $HOME/server/sbin/rundeckd start
 echo "started rundeck"
 
 # Wait for server to start
-SUCCESS_MSG="Started ServerConnector@"
+SUCCESS_MSG="Grails application running"
 MAX_ATTEMPTS=30
 SLEEP=10
 echo "Waiting for $RUNDECK_NODE to start. This will take about 2 minutes... "

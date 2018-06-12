@@ -7,7 +7,8 @@ dataSource {
 }
 hibernate {
 	cache.use_second_level_cache = true
-	cache.use_query_cache = false
+	cache.use_query_cache = true
+	cache.queries = true
 	cache.region.factory_class = 'org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory' // Hibernate 4
 	singleSession = true // configure OSIV singleSession mode
 	flush.mode = 'manual' // OSIV session flush mode outside of transactional context
@@ -38,7 +39,7 @@ environments {
 	}
 	test {
 		dataSource {
-			dbCreate = "update"
+			dbCreate = "create-drop"
 			url = "jdbc:h2:file:./db/testDb"
 		}
 	}

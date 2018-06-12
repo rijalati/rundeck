@@ -52,6 +52,7 @@ function Option(data) {
     var self = this;
     self.remoteLoadCallback = null;
     self.name = ko.observable(data.name);
+    self.label = ko.observable(data.label);
     self.uid = ko.observable(data.uid||(++_option_uid+'_opt'));
     self.description = ko.observable(data.description);
     self.descriptionHtml = ko.observable(data.descriptionHtml);
@@ -141,6 +142,7 @@ function Option(data) {
         });
         return optionVal;
     };
+    self.loadedRemoteValues = ko.observable(false);
     self.remoteValues = ko.observableArray([]);
     if (self.multivalued()) {
 
@@ -370,6 +372,7 @@ function Option(data) {
     });
 
     self.loadRemoteValues = function (values, selvalue) {
+        self.loadedRemoteValues(false);
         self.remoteError(null);
         var tvalues = [];
         var tmultivalues = [];
@@ -439,6 +442,7 @@ function Option(data) {
 
         //triggers refresh of "selectOptions" populating select box
         self.remoteValues(rvalues);
+        self.loadedRemoteValues(true);
     };
     /**
      * Option values data loaded from remote JSON request

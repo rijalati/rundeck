@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Rundeck, Inc. (http://rundeck.com)
+ * Copyright 2018 Rundeck, Inc. (http://rundeck.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 package com.dtolabs.rundeck.core.rules;
 
+import com.dtolabs.rundeck.core.data.DataContext;
+import com.dtolabs.rundeck.core.dispatcher.ContextView;
+import com.dtolabs.rundeck.core.execution.workflow.WFSharedContext;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -110,6 +113,9 @@ class WorkflowEngineOperationsProcessor<DAT, RES extends WorkflowSystem.Operatio
                     continue;
                 }
 
+                getContextGlobalData(changes);
+
+
                 //handle state changes
                 processStateChanges(changes);
 
@@ -146,6 +152,27 @@ class WorkflowEngineOperationsProcessor<DAT, RES extends WorkflowSystem.Operatio
         }
     }
 
+    private void getContextGlobalData(final Map<String, String> changes){
+        DAT inputData = null != sharedData ? sharedData.produceNext() : null;
+        if(inputData != null && inputData instanceof WFSharedContext) {
+            DataContext globals = ((WFSharedContext) inputData).getData().get(ContextView.global());
+            if (null != globals) {
+                HashMap<String, String> stringStringHashMap = new HashMap<>();
+                for (String s : globals.keySet()) {
+                    Map<String, String> map = globals.get(s);
+                    for (String key : map.keySet()) {
+
+                        if(!workflowEngine.getState().getState().containsKey(s + "." + key) ||
+                                !workflowEngine.getState().getState().get(s + "." + key).equals(map.get(key))){
+                            stringStringHashMap.put(s + "." + key, map.get(key));
+                        }
+                    }
+                }
+                changes.putAll(stringStringHashMap);
+            }
+        }
+    }
+
     private void awaitFutures() {
         if (!inProcess.isEmpty()) {
             for (ListenableFuture<RES> future : futures) {
@@ -159,9 +186,7 @@ class WorkflowEngineOperationsProcessor<DAT, RES extends WorkflowSystem.Operatio
     }
 
     private void cancelFutures() {
-        for (ListenableFuture<RES> future : futures) {
-            future.cancel(true);
-        }
+        futures.forEach(future -> future.cancel(true));
     }
 
     public void initialize() {
