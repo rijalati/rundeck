@@ -134,8 +134,8 @@ task('createPom').doLast {
                         artifactId 'maven-compiler-plugin'
                         version '2.3.2'
                         configuration{
-                            'source'('1.7')
-                            'target'('1.7')
+                            'source'('1.8')
+                            'target'('1.8')
                         }
                     }
                     plugin{
